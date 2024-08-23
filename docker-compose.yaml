@@ -9,8 +9,9 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - mynetwork
+      eip-net:
+        ipv4_address: 172.20.0.13
 
 networks:
-  mynetwork:
-    driver: bridge
+  eip-net:
+    external: true
