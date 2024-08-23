@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     volumes:
-      - /root/backend/static/:/backend/static/
+      - /root/backend/static/:/app/static/
     ports:
       - "8000:8000"
     networks:

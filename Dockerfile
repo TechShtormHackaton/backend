@@ -1,10 +1,14 @@
 FROM python:3.10-slim-buster AS builder
 
-COPY requirements.txt .
+WORKDIR /app
 
-RUN pip install -r requirements.txt
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+
+RUN mkdir -p /app/static
 
 EXPOSE 8000
 
