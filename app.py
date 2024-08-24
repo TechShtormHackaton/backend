@@ -1,8 +1,13 @@
+import sys
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-from controllers.load_file_controllers import router as LoadFileController
 
+from controllers.load_file_controllers import router as LoadFileController
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 app = FastAPI()
 

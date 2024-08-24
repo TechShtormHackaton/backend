@@ -1,12 +1,14 @@
 import asyncio
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
-
+from ai.transform import *
 from repositories.load_file_repository import LoadFileRepository, load_message_repository
 from fastapi import Depends, UploadFile, HTTPException
 from starlette import status
 import shutil
 import os
+
+from run_model import run_model
 
 
 class LoadFileService:
@@ -54,6 +56,16 @@ class LoadFileService:
         chunk_filename = f"{chunks_dir}/{base_name}_chunk_{start_time}-{end_time}.mp4"
         chunk = video.subclip(start_time, end_time)
         chunk.write_videofile(chunk_filename, codec="libx264", audio_codec="aac")
+
+        model = tf.keras.models.load_model('video_model.keras',
+                                           custom_objects={'Conv2Plus1D': Conv2Plus1D,
+                                                           'ResidualMain': ResidualMain,
+                                                           'Project': Project,
+                                                           'add_residual_block': add_residual_block,
+                                                           'ResizeVideo': ResizeVideo})
+
+        result = run_model(chunk_filename, model)
+        print(f"Prediction for: {result}")
 
 
 def load_file_service(load_file_repository: LoadFileRepository = Depends(load_message_repository)) -> LoadFileService:
