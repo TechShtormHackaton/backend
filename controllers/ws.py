@@ -4,7 +4,7 @@ import asyncio
 import io
 from PIL import Image
 from ai.transform import *
-from managers.web_socket_manager import connection_manager
+from managers.web_socket_manager import connection_manager, ConnectionManager
 from services.ws_service import WebSocketService, get_ws_service
 from run_model import run_model
 from models import VideoPath
@@ -23,13 +23,13 @@ async def websocket_endpoint(websocket: WebSocket, service: WebSocketService = D
 
     try:
         video_path = path
-        await send_video_and_statistics(video_path, websocket)
+        await send_video_and_statistics(video_path, websocket, connection_manager)
 
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)
 
 
-async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket):
+async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket, connection_manager):
     try:
         model = tf.keras.models.load_model('video_model.keras',
                                            custom_objects={'Conv2Plus1D': Conv2Plus1D,
@@ -72,6 +72,8 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
             await websocket.send_json(data)
 
             await asyncio.sleep(1)
+
+        await connection_manager.disconnect(websocket)
 
     except Exception as e:
         print(f"Error: {e}")
