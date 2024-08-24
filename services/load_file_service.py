@@ -22,7 +22,7 @@ class LoadFileService:
                                                            'add_residual_block': add_residual_block,
                                                            'ResizeVideo': ResizeVideo})
 
-        statistic = run_model(video_file=video, model=model)
+        statistic = run_model(video_file=video.file, model=model)
         video_name = video.filename
 
         existing_video = await self.load_file_repository.get_video_by_name(video_name)
@@ -36,9 +36,11 @@ class LoadFileService:
         if statistic == 1:
             data['faceoff'] += 1
             existing_video.throws += 1
+            await self.load_file_repository.update_models()
         elif statistic == 2:
             data['priemy'] += 1
             existing_video.power_state += 1
+            await self.load_file_repository.update_models()
 
         return data
 

@@ -23,6 +23,9 @@ class LoadFileRepository:
         result = await self.session.execute(select(VideoPath).where(VideoPath.path == video_name))
         return result.scalar()
 
+    async def update_models(self):
+        await self.session.commit()
+
 
 def load_message_repository(session: AsyncSession = Depends(get_session)) -> LoadFileRepository:
     return LoadFileRepository(session)
