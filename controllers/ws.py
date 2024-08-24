@@ -31,7 +31,7 @@ async def websocket_endpoint(websocket: WebSocket, service: WebSocketService = D
 
 async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket):
     try:
-        model = tf.keras.models.load_model('video_model_2.0.keras',
+        model = tf.keras.models.load_model('video_model.keras',
                                            custom_objects={'Conv2Plus1D': Conv2Plus1D,
                                                            'ResidualMain': ResidualMain,
                                                            'Project': Project,
@@ -45,7 +45,7 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
 
         for frame_video in video_path.video_frame:
 
-            result_ai = run_model(video_path.path, model)
+            result_ai = run_model(frame_video.frame_path, model)
 
             if isinstance(result_ai, np.int64):
                 result_ai = int(result_ai)
@@ -62,7 +62,6 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
             for t in range(0, int(duration), 1):
                 frame = video.get_frame(t)
 
-                # Преобразуем кадр в изображение JPEG и оборачиваем в байты
                 image = Image.fromarray(frame)
                 buffer = io.BytesIO()
                 image.save(buffer, format="JPEG")
