@@ -1,4 +1,6 @@
 import asyncio
+import shutil
+
 from models.video_path import VideoPath
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from ai.transform import *
@@ -15,6 +17,7 @@ class LoadFileService:
         self.load_file_repository = load_file_repository
 
     async def process_video_file(self, video: UploadFile):
+        # Загружаем модель
         model = tf.keras.models.load_model('video_model.keras',
                                            custom_objects={'Conv2Plus1D': Conv2Plus1D,
                                                            'ResidualMain': ResidualMain,
@@ -22,27 +25,40 @@ class LoadFileService:
                                                            'add_residual_block': add_residual_block,
                                                            'ResizeVideo': ResizeVideo})
 
-        statistic = run_model(video_file=video.file, model=model)
-        video_name = video.filename
+        video_path = f"{os.getcwd()}/static/{video.filename}"
+        with open(video_path, "wb") as buffer:
+            shutil.copyfileobj(video.file, buffer)
 
-        existing_video = await self.load_file_repository.get_video_by_name(video_name)
+        existing_video = await self.load_file_repository.get_video_by_name(video.filename)
 
         if not existing_video:
-            existing_video = VideoPath(path=video_name)
+            existing_video = VideoPath(video_name=video.filename)
             await self.load_file_repository.add_video_path(existing_video)
 
-        data = {"faceoff": 0, "priemy": 0}
+        # Запускаем модель и получаем статистику
+        statistic = run_model(video_file=video_path, model=model)
 
         if statistic == 1:
-            data['faceoff'] += 1
             existing_video.throws += 1
-            await self.load_file_repository.update_models()
         elif statistic == 2:
-            data['priemy'] += 1
             existing_video.power_state += 1
-            await self.load_file_repository.update_models()
+        else:
+            existing_video.empty_state += 1
 
-        return data
+        await self.load_file_repository.update_models()
+
+        return await self.__get_total_stats(video.filename)
+
+    async def __get_total_stats(self, video_name: str):
+        videos = await self.load_file_repository.get_videos_by_name(video_name)
+
+        total_stats = {
+            "total_faceoff": sum(video.throws for video in videos),
+            "total_priemy": sum(video.power_state for video in videos),
+            "total_empty": sum(video.empty_state for video in videos),
+        }
+
+        return total_stats
 
     async def __split_video_into_chunks_and_analyze(self, video_path: str, video_path_model: VideoPath,
                                                     chunk_duration: int = 3):

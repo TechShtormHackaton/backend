@@ -19,12 +19,18 @@ class LoadFileRepository:
         result = await self.session.execute(select(VideoPath))
         return result.scalar()
 
-    async def get_video_by_name(self, video_name: str):
-        result = await self.session.execute(select(VideoPath).where(VideoPath.path == video_name))
-        return result.scalar()
-
     async def update_models(self):
         await self.session.commit()
+
+    async def get_video_by_name(self, video_name: str):
+        query = select(VideoPath).filter_by(video_name=video_name)
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
+    async def get_videos_by_name(self, video_name: str):
+        query = select(VideoPath).filter_by(video_name=video_name)
+        result = await self.session.execute(query)
+        return result.scalars().all()
 
 
 def load_message_repository(session: AsyncSession = Depends(get_session)) -> LoadFileRepository:
