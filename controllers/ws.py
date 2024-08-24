@@ -38,26 +38,25 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
                                                            'add_residual_block': add_residual_block,
                                                            'ResizeVideo': ResizeVideo})
 
-        for frame_video in video_path.video_frame:
+        data = {
+            "faceoff": 0,
+            "priemy": 0
+        }
 
-            data = {
-                "faceoff": 0,
-                "priemy": 0
-            }
+        for frame_video in video_path.video_frame:
 
             result_ai = run_model(frame_video.frame_path, model)
 
             if isinstance(result_ai, np.int64):
-                print(result_ai)
                 result_ai = int(result_ai)
 
-            print(result_ai)
             if result_ai == 1:
                 data['faceoff'] += 1
             elif result_ai == 2:
                 data['priemy'] += 1
 
             video = VideoFileClip(frame_video.frame_path)
+
             duration = video.duration
 
             for t in range(0, int(duration), 1):
