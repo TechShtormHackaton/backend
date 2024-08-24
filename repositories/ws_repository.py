@@ -4,7 +4,6 @@ from fastapi import Depends
 from sqlalchemy import desc
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-from models.frame_video import FrameVideo
 from models.video_path import VideoPath
 
 
