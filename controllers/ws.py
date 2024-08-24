@@ -31,7 +31,7 @@ async def websocket_endpoint(websocket: WebSocket, service: WebSocketService = D
 
 async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket):
     try:
-        model = tf.keras.models.load_model('video_model.keras',
+        model = tf.keras.models.load_model('video_model_2.0.keras',
                                            custom_objects={'Conv2Plus1D': Conv2Plus1D,
                                                            'ResidualMain': ResidualMain,
                                                            'Project': Project,
@@ -45,7 +45,7 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
 
         for frame_video in video_path.video_frame:
 
-            result_ai = run_model(frame_video.frame_path, model)
+            result_ai = run_model(video_path.path, model)
 
             if isinstance(result_ai, np.int64):
                 result_ai = int(result_ai)
@@ -55,7 +55,7 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
             elif result_ai == 2:
                 data['priemy'] += 1
 
-            video = VideoFileClip(frame_video.frame_path)
+            video = VideoFileClip(video_path.path)
 
             duration = video.duration
 

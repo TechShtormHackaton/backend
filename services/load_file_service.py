@@ -37,7 +37,7 @@ class LoadFileService:
             )
 
     async def __split_video_into_chunks_and_analyze(self, video_path: str, video_path_model: VideoPath,
-                                                    chunk_duration: int = 4):
+                                                    chunk_duration: int = 5):
         try:
             video = VideoFileClip(video_path)
             video_duration = int(video.duration)
