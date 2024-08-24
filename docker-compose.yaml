@@ -12,9 +12,6 @@ services:
       eip-net:
         ipv4_address: 172.20.0.13
 
-  ai_model:
-
-
 networks:
   eip-net:
     external: true
