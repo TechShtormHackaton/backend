@@ -10,5 +10,5 @@ class VideoPath(Base):
     id = Column(Integer, primary_key=True)
     path = Column(String)
 
-
     video_frame = relationship('FrameVideo', back_populates='video_path')
+    stats = relationship('Stats', back_populates='video_frame')

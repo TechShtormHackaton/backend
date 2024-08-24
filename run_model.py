@@ -19,4 +19,3 @@ def run_model(video_file, model):
     predicted = predicted.numpy()[0]
 
     return predicted
-

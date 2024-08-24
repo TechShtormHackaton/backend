@@ -1,6 +1,8 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import asyncio
+import io
+from PIL import Image
 from ai.transform import *
 from managers.web_socket_manager import connection_manager
 from services.ws_service import WebSocketService, get_ws_service
@@ -39,12 +41,21 @@ async def send_video_and_statistics(video_path: VideoPath, websocket: WebSocket)
         for frame_video in video_path.video_frame:
 
             result_ai = run_model(frame_video.frame_path, model)
+
+            if isinstance(result_ai, np.int64):
+                result_ai = int(result_ai)
+
             video = VideoFileClip(frame_video.frame_path)
             duration = video.duration
 
             for t in range(0, int(duration), 1):
                 frame = video.get_frame(t)
-                frame_data = frame.tobytes()
+
+                # Преобразуем кадр в изображение JPEG и оборачиваем в байты
+                image = Image.fromarray(frame)
+                buffer = io.BytesIO()
+                image.save(buffer, format="JPEG")
+                frame_data = buffer.getvalue()
 
                 await websocket.send_bytes(frame_data)
 

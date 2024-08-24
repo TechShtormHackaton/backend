@@ -10,4 +10,8 @@ class FrameVideo(Base):
     video_id = Column(Integer, ForeignKey('video_path.id'))
     frame_path = Column(String)
 
+    power_state = Column(Integer, default=0)
+    throws = Column(Integer, default=0)
+    empty_state = Column(Integer, default=0)
+
     video_path = relationship('VideoPath', back_populates='video_frame')
