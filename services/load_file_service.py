@@ -37,7 +37,7 @@ class LoadFileService:
             )
 
     async def __split_video_into_chunks_and_analyze(self, video_path: str, video_path_model: VideoPath,
-                                                    chunk_duration: int = 3):
+                                                    chunk_duration: int = 4):
         try:
             video = VideoFileClip(video_path)
             video_duration = int(video.duration)
@@ -58,7 +58,7 @@ class LoadFileService:
             )
 
     async def __process_chunk(self, video, start_time, end_time, chunks_dir, base_name, video_path_model):
-        chunk_filename = f"{chunks_dir}/{base_name}_chunk_{start_time}-{end_time}.mp4"
+        chunk_filename = f"{chunks_dir}/{base_name}_chunk_{start_time}-{end_time}.mov"
         chunk = video.subclip(start_time, end_time)
         chunk.write_videofile(chunk_filename, codec="libx264", audio_codec="aac")
 

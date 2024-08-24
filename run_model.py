@@ -2,6 +2,12 @@ from ai.transform import *
 
 
 def run_model(video_file, model):
+    # model = tf.keras.models.load_model('../video_model.keras',
+    #                                    custom_objects={'Conv2Plus1D': Conv2Plus1D,
+    #                                                    'ResidualMain': ResidualMain,
+    #                                                    'Project': Project,
+    #                                                    'add_residual_block': add_residual_block,
+    #                                                    'ResizeVideo': ResizeVideo})
     n_frames = 10
     batch_size = 1
 
@@ -19,3 +25,7 @@ def run_model(video_file, model):
     predicted = predicted.numpy()[0]
 
     return predicted
+
+
+# a = run_model(video_file='C:\\Users\\Mekan Mededov\\PycharmProjects\\backend\\static\\0823(19)_chunks\\0823(19)_chunk_0-3.mov')
+# print(a)
