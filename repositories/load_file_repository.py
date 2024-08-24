@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from models.video_path import VideoPath
-from models.frame_video import FrameVideo
-
+from sqlalchemy.future import select
 from database.session import get_session
 
 
@@ -16,11 +15,13 @@ class LoadFileRepository:
         await self.session.refresh(data)
         return data
 
-    async def add_frame_path(self, data: FrameVideo):
-        self.session.add(data)
-        await self.session.commit()
-        await self.session.refresh(data)
-        return data
+    async def get_video_path(self) -> VideoPath:
+        result = await self.session.execute(select(VideoPath))
+        return result.scalar()
+
+    async def get_video_by_name(self, video_name: str):
+        result = await self.session.execute(select(VideoPath).where(VideoPath.path == video_name))
+        return result.scalar()
 
 
 def load_message_repository(session: AsyncSession = Depends(get_session)) -> LoadFileRepository:

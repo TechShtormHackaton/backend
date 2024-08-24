@@ -1,12 +1,10 @@
 import asyncio
 from models.video_path import VideoPath
-from models.frame_video import FrameVideo
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from ai.transform import *
 from repositories.load_file_repository import LoadFileRepository, load_message_repository
 from fastapi import Depends, UploadFile, HTTPException
 from starlette import status
-import shutil
 import os
 
 from run_model import run_model
@@ -17,27 +15,35 @@ class LoadFileService:
         self.load_file_repository = load_file_repository
 
     async def process_video_file(self, video: UploadFile):
-        try:
-            video_path = f"{os.getcwd()}/static/{video.filename}"
+        model = tf.keras.models.load_model('video_model.keras',
+                                           custom_objects={'Conv2Plus1D': Conv2Plus1D,
+                                                           'ResidualMain': ResidualMain,
+                                                           'Project': Project,
+                                                           'add_residual_block': add_residual_block,
+                                                           'ResizeVideo': ResizeVideo})
 
-            with open(video_path, "wb") as buffer:
-                shutil.copyfileobj(video.file, buffer)
+        statistic = run_model(video_file=video, model=model)
+        video_name = video.filename
 
-                new_video = VideoPath(
-                    path=video_path,
-                )
+        existing_video = await self.load_file_repository.get_video_by_name(video_name)
 
-                video_path_model = await self.load_file_repository.add_video_path(new_video)
+        if not existing_video:
+            existing_video = VideoPath(path=video_name)
+            await self.load_file_repository.add_video_path(existing_video)
 
-            await self.__split_video_into_chunks_and_analyze(video_path, video_path_model)
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка при загрузке видео: {str(e)}"
-            )
+        data = {"faceoff": 0, "priemy": 0}
+
+        if statistic == 1:
+            data['faceoff'] += 1
+            existing_video.throws += 1
+        elif statistic == 2:
+            data['priemy'] += 1
+            existing_video.power_state += 1
+
+        return data
 
     async def __split_video_into_chunks_and_analyze(self, video_path: str, video_path_model: VideoPath,
-                                                    chunk_duration: int = 5):
+                                                    chunk_duration: int = 3):
         try:
             video = VideoFileClip(video_path)
             video_duration = int(video.duration)
@@ -61,13 +67,6 @@ class LoadFileService:
         chunk_filename = f"{chunks_dir}/{base_name}_chunk_{start_time}-{end_time}.mov"
         chunk = video.subclip(start_time, end_time)
         chunk.write_videofile(chunk_filename, codec="libx264", audio_codec="aac")
-
-        new_frame_video = FrameVideo(
-            video_id=video_path_model.id,
-            frame_path=chunk_filename
-        )
-
-        await self.load_file_repository.add_frame_path(new_frame_video)
 
 
 def load_file_service(load_file_repository: LoadFileRepository = Depends(load_message_repository)) -> LoadFileService:
