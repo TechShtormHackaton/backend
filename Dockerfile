@@ -12,4 +12,4 @@ RUN mkdir -p /app/static
 
 EXPOSE 8000
 
-CMD ["bash", "-c", "alembic upgrade head && uvicorn app:app --host 0.0.0.0 --port 8000"]
+CMD ["bash", "-c", "alembic -c /app/alembic.ini upgrade head && uvicorn app:app --host 0.0.0.0 --port 8000"]
