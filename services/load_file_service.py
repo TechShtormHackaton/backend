@@ -11,6 +11,7 @@ from models.video_frame import FrameVideo
 from repositories.load_file_repository import LoadFileRepository, load_message_repository
 from run_model import run_model
 from ai.transform import *
+from ai.est import image_to_tensor, extract_middle_frame_from_video
 
 
 class LoadFileService:
@@ -38,6 +39,9 @@ class LoadFileService:
                 detail=f"Ошибка при загрузке видео: {str(e)}"
             )
 
+    async def get_stats_from_video_path(self):
+        latest_video = await self.load_file_repository.get_latest_video()
+
     def _save_uploaded_file(self, video: UploadFile) -> str:
         """Сохраняет загруженный видеофайл на диск."""
         video_path = f"{os.getcwd()}/static/{video.filename}"
@@ -46,7 +50,7 @@ class LoadFileService:
         return video_path
 
     async def _split_video_into_chunks_and_analyze(self, video_path: str, video_path_model: VideoPath,
-                                                   chunk_duration: int = 3):
+                                                   chunk_duration: int = 2):
         """Разделяет видео на куски и сохраняет их в базу данных."""
         try:
             video = VideoFileClip(video_path)
@@ -72,45 +76,54 @@ class LoadFileService:
         chunk = video.subclip(start_time, end_time)
         chunk.write_videofile(chunk_filename, codec="libx264", audio_codec="aac")
 
-        # Сохранение информации о кусках видео в базе данных
+        model = tf.keras.models.load_model('video_model_2.1.keras',
+                                           custom_objects={'Conv2Plus1D': Conv2Plus1D,
+                                                           'ResidualMain': ResidualMain,
+                                                           'Project': Project,
+                                                           'add_residual_block': add_residual_block,
+                                                           'ResizeVideo': ResizeVideo})
+
+        result = run_model(video_file=chunk_filename, model=model)
+
+        middle_frame = extract_middle_frame_from_video(chunk_filename)
+
+        text = image_to_tensor(middle_frame)
         new_frame_video = FrameVideo(
             video_id=video_path_model.id,
-            frame_path=chunk_filename
+            frame_path=chunk_filename,
+            throws_state=result if int(result) == 1 else 0,
+            power_state=result if int(result) == 2 else 0,
+            empty_state=result if int(result) == 0 else 0,
+            description=text if text else None
         )
         await self.load_file_repository.add_frame_path(new_frame_video)
 
-    async def stream_and_analyze_video(self):
-        """Стримит последнее видео и анализирует его перед отправкой."""
-        try:
-            model = tf.keras.models.load_model('video_model_2.1.keras',
-                                               custom_objects={'Conv2Plus1D': Conv2Plus1D,
-                                                               'ResidualMain': ResidualMain,
-                                                               'Project': Project,
-                                                               'add_residual_block': add_residual_block,
-                                                               'ResizeVideo': ResizeVideo})
-            latest_video = await self.load_file_repository.get_latest_video()
+    async def get_analysis_results(self):
+        latest_video = await self.load_file_repository.get_latest_video()
 
-            if latest_video is None or not latest_video.video_frame:
-                raise HTTPException(status_code=404, detail="No video found.")
+        if not latest_video:
+            raise HTTPException(status_code=404, detail="No video found.")
 
-            async def stream_generator():
-                for frame_video in latest_video.video_frame:
-                    chunk_path = frame_video.frame_path
+        unsent_frames = [
+            frame for frame in sorted(latest_video.video_frame, key=lambda x: x.id) if not frame.is_send
+        ]
 
-                    # Анализ сегмента с помощью модели
-                    result = run_model(video_file=chunk_path, model=model)
+        if not unsent_frames:
+            return {"message": "All frames have been sent"}
 
-                    # Отправка результата анализа
-                    yield f"--frame\r\nContent-Type: text/plain\r\n\r\nSegment: {os.path.basename(chunk_path)}, Result: {result}\r\n\r\n"
+        for frame in unsent_frames:
 
-                    # Отправка видеофайла сегмента
-                    with open(chunk_path, "rb") as chunk_file:
-                        yield b"--frame\r\nContent-Type: video/mp4\r\n\r\n" + chunk_file.read() + b"\r\n"
+            data = {
+                "throws_state": frame.throws_state,
+                "power_state": frame.power_state,
+                "empty_state": frame.empty_state,
+                "description": frame.description
+            }
 
-            return StreamingResponse(stream_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
+            frame.is_send = True
+            await self.load_file_repository.update_frame_path(frame)
 
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error streaming video: {str(e)}")
+            return {"results": data}
 
 
 def load_file_service(load_file_repository: LoadFileRepository = Depends(load_message_repository)) -> LoadFileService:

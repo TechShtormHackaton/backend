@@ -1,15 +1,37 @@
+import io
+
+import numpy as np
+from moviepy.video.io.VideoFileClip import VideoFileClip
 from transformers import AutoProcessor, AutoModelForVision2Seq
 from PIL import Image
 
 
-def image_to_tensor(image):
-    model = AutoModelForVision2Seq.from_pretrained("../tf_save_pretrained_model")
+def extract_middle_frame_from_video(video_path):
+    """Извлекает кадр из середины видео и возвращает его как изображение PIL."""
+    with VideoFileClip(video_path) as video:
+        middle_time = video.duration / 2  # Время середины видео
+        frame = video.get_frame(middle_time)  # Извлекаем кадр из середины
+        image = Image.fromarray(np.uint8(frame))  # Преобразуем массив numpy в изображение PIL
+    return image
 
-    processor = AutoProcessor.from_pretrained('../tf_save_pretrained_processor')
 
-    image = Image.open("first_frame.jpg")
+def image_to_tensor(image: Image.Image):
+    # Сохраняем изображение в буфер в формате JPEG
+    image_buffer = io.BytesIO()
+    image.save(image_buffer, format='JPEG')
+    image_buffer.seek(0)  # Возвращаем курсор в начало буфера
+
+    model = AutoModelForVision2Seq.from_pretrained("tf_save_pretrained_model")
+    processor = AutoProcessor.from_pretrained('tf_save_pretrained_processor')
 
     prompt = "Description of KHL hockey game:"
+
+    # Читаем изображение из буфера
+    image_bytes = image_buffer.read()
+    image_buffer.seek(0)
+
+    # Преобразуем байты обратно в изображение для дальнейшей обработки
+    image = Image.open(io.BytesIO(image_bytes))
 
     inputs = processor(text=prompt, images=image, return_tensors="pt")
 

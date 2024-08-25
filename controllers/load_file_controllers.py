@@ -14,6 +14,8 @@ async def get_video_file(video: UploadFile = File(...),
     return status
 
 
-@router.get("/stream", summary="Стриминг и анализ последнего видео")
-async def stream_video(service: LoadFileService = Depends(load_file_service)):
-    return await service.stream_and_analyze_video()
+@router.get("/result", summary="Результаты анализированного видео")
+async def get_result(service: LoadFileService = Depends(load_file_service)):
+    data = await service.get_analysis_results()
+    return data
+

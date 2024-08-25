@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from sqlalchemy.orm import joinedload
@@ -33,6 +34,14 @@ class LoadFileRepository:
         )
         return result.scalars().first()
 
+    async def update_frame_path(self, frame_video: FrameVideo):
+        """Обновление статуса отправки фрейма."""
+        await self.session.execute(
+            update(FrameVideo)
+            .where(FrameVideo.id == frame_video.id)
+            .values(is_send=frame_video.is_send)
+        )
+        await self.session.commit()
 
 def load_message_repository(session: AsyncSession = Depends(get_session)) -> LoadFileRepository:
     return LoadFileRepository(session)
