@@ -25,6 +25,11 @@ class LoadFileRepository:
         await self.session.refresh(data)
         return data
 
+
+    async def update_total_count(self, video_path_model: VideoPath):
+        self.session.add(video_path_model)
+        await self.session.commit()
+
     async def get_latest_video(self) -> VideoPath:
         result = await self.session.execute(
             select(VideoPath)
@@ -42,6 +47,7 @@ class LoadFileRepository:
             .values(is_send=frame_video.is_send)
         )
         await self.session.commit()
+
 
 def load_message_repository(session: AsyncSession = Depends(get_session)) -> LoadFileRepository:
     return LoadFileRepository(session)

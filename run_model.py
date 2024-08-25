@@ -2,7 +2,7 @@ from ai.transform import *
 
 
 def run_model(video_file, model):
-    # model = tf.keras.models.load_model('../video_model_2.0.keras',
+    # model = tf.keras.models.load_model('video_model_2.1.keras',
     #                                    custom_objects={'Conv2Plus1D': Conv2Plus1D,
     #                                                    'ResidualMain': ResidualMain,
     #                                                    'Project': Project,
@@ -27,6 +27,6 @@ def run_model(video_file, model):
     return predicted
 
 
-#
-# a = run_model(video_file='C:\\Users\\Mekan Mededov\\PycharmProjects\\backend\\static\\0823(15).mov')
+
+# a = run_model(video_file='C:\\Users\\1\\PycharmProjects\\backend\\static\\0824(3)_chunks\\0824(3)_chunk_0-3.mp4')
 # print(a)

@@ -24,7 +24,7 @@ def image_to_tensor(image: Image.Image):
     model = AutoModelForVision2Seq.from_pretrained("tf_save_pretrained_model")
     processor = AutoProcessor.from_pretrained("tf_save_pretrained_processor")
 
-    prompt = "Description of KHL hockey game:"
+    prompt = "Description of ice hockey game:"
 
     # Читаем изображение из буфера
     image_bytes = image_buffer.read()

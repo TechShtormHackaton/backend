@@ -53,8 +53,6 @@ class CreateFrames:
             print(f"Error: Couldn't read a frame from video {video_path}")
             return
 
-        # Сохранение первого кадра для проверки
-        cv2.imwrite("first_frame.jpg", frame)
 
         result.append(CreateFrames.format_frames(frame, output_size))
 

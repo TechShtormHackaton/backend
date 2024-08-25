@@ -13,6 +13,10 @@ from run_model import run_model
 from ai.transform import *
 from ai.est import image_to_tensor, extract_middle_frame_from_video
 
+global_throws_counter = 0
+global_power_counter = 0
+global_safes_counter = 0
+
 
 class LoadFileService:
     def __init__(self, load_file_repository: LoadFileRepository):
@@ -50,7 +54,7 @@ class LoadFileService:
         return video_path
 
     async def _split_video_into_chunks_and_analyze(self, video_path: str, video_path_model: VideoPath,
-                                                   chunk_duration: int = 2):
+                                                   chunk_duration: int = 3):
         """Разделяет видео на куски и сохраняет их в базу данных."""
         try:
             video = VideoFileClip(video_path)
@@ -72,7 +76,7 @@ class LoadFileService:
 
     async def _process_chunk(self, video, start_time, end_time, chunks_dir, base_name, video_path_model):
         """Создает и сохраняет кусок видео."""
-        chunk_filename = f"{chunks_dir}/{base_name}_chunk_{start_time}-{end_time}.mp4"
+        chunk_filename = f"{chunks_dir}/{base_name}_chunk_{start_time}-{end_time}.mov"
         chunk = video.subclip(start_time, end_time)
         chunk.write_videofile(chunk_filename, codec="libx264", audio_codec="aac")
 
@@ -96,9 +100,11 @@ class LoadFileService:
             safes_state=result if result is not None and int(result) == 2 else None,
             description=text if text else None
         )
+
         await self.load_file_repository.add_frame_path(new_frame_video)
 
     async def get_analysis_results(self):
+        global global_throws_counter, global_power_counter, global_safes_counter
         latest_video = await self.load_file_repository.get_latest_video()
 
         if not latest_video:
@@ -109,20 +115,29 @@ class LoadFileService:
         ]
 
         if not unsent_frames:
+            global_throws_counter = 0
+            global_power_counter = 0
+            global_safes_counter = 0
             return {"message": "All frames have been sent"}
 
         for frame in unsent_frames:
-            data = {
-                "throws_state": frame.throws_state if frame.throws_state else None,
-                "power_state": frame.power_state if frame.power_state else None,
-                "safes_state": frame.safes_state if frame.safes_state else None,
-                "description": frame.description
-            }
+            # Увеличение счетчиков при каждом вызове метода
+            if frame.throws_state is not None:
+                global_throws_counter += 1
+            if frame.power_state is not None:
+                global_power_counter += 1
+            if frame.safes_state is not None:
+                global_safes_counter += 1
 
             frame.is_send = True
             await self.load_file_repository.update_frame_path(frame)
 
-            return {"results": data}
+            return {
+                "throws_counter": global_throws_counter,
+                "power_counter": global_power_counter,
+                "safes_counter": global_safes_counter,
+                "description": frame.description
+            }
 
 
 def load_file_service(load_file_repository: LoadFileRepository = Depends(load_message_repository)) -> LoadFileService:
