@@ -3,3 +3,5 @@
 __pycache__
 .idea
 static
+tf_save_pretrained_model
+tf_save_pretrained_processor

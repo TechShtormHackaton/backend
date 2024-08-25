@@ -18,7 +18,7 @@ class LoadFileService:
 
     async def process_video_file(self, video: UploadFile):
         # Загружаем модель
-        model = tf.keras.models.load_model('video_model.keras',
+        model = tf.keras.models.load_model('video_model_2.1.keras',
                                            custom_objects={'Conv2Plus1D': Conv2Plus1D,
                                                            'ResidualMain': ResidualMain,
                                                            'Project': Project,
