@@ -10,9 +10,9 @@ class FrameVideo(Base):
     video_id = Column(Integer, ForeignKey('video_path.id'))
     frame_path = Column(String)
 
-    power_state = Column(Integer, default=0)
-    throws_state = Column(Integer, default=0)
-    safes_state = Column(Integer, default=0)
+    power_state = Column(Integer, default=None, nullable=True)
+    throws_state = Column(Integer, default=None, nullable=True)
+    safes_state = Column(Integer, default=None, nullable=True)
     description = Column(String)
     is_send = Column(Boolean, default=False)
 

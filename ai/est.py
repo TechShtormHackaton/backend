@@ -21,8 +21,8 @@ def image_to_tensor(image: Image.Image):
     image.save(image_buffer, format='JPEG')
     image_buffer.seek(0)  # Возвращаем курсор в начало буфера
 
-    model = AutoModelForVision2Seq.from_pretrained("/app/tf_save_pretrained_model")
-    processor = AutoProcessor.from_pretrained("/app/tf_save_pretrained_processor")
+    model = AutoModelForVision2Seq.from_pretrained("tf_save_pretrained_model")
+    processor = AutoProcessor.from_pretrained("tf_save_pretrained_processor")
 
     prompt = "Description of KHL hockey game:"
 
