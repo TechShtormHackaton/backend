@@ -6,6 +6,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - /root/backend/static/:/app/static/
+      - ./tf_save_pretrained_model:/app/tf_save_pretrained_model
+      - ./tf_save_pretrained_processor:/app/tf_save_pretrained_processor
     ports:
       - "8000:8000"
     networks:
