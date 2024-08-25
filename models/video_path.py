@@ -8,9 +8,6 @@ class VideoPath(Base):
     __tablename__ = 'video_path'
 
     id = Column(Integer, primary_key=True)
-    video_name = Column(String)
+    path = Column(String)
 
-    power_state = Column(Integer, default=0)
-    throws = Column(Integer, default=0)
-    empty_state = Column(Integer, default=0)
-
+    video_frame = relationship('FrameVideo', back_populates='video_path')
