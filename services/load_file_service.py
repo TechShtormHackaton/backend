@@ -91,9 +91,9 @@ class LoadFileService:
         new_frame_video = FrameVideo(
             video_id=video_path_model.id,
             frame_path=chunk_filename,
-            throws_state=result if int(result) == 1 else 0,
-            power_state=result if int(result) == 2 else 0,
-            empty_state=result if int(result) == 0 else 0,
+            throws_state=result if int(result) == 0 else 0,
+            power_state=result if int(result) == 1 else 0,
+            safes_state=result if int(result) == 2 else 0,
             description=text if text else None
         )
         await self.load_file_repository.add_frame_path(new_frame_video)

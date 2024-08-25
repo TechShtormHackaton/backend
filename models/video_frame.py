@@ -12,7 +12,7 @@ class FrameVideo(Base):
 
     power_state = Column(Integer, default=0)
     throws_state = Column(Integer, default=0)
-    empty_state = Column(Integer, default=0)
+    safes_state = Column(Integer, default=0)
     description = Column(String)
     is_send = Column(Boolean, default=False)
 
